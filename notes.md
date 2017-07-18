@@ -87,6 +87,8 @@ $ source venv/bin/activate
 
 
 
+
+
 Your first Airflow Operator
 
 An Operator is an atomic block of workflow logic, which performs a single action.
@@ -104,3 +106,47 @@ airflow_home
 ├── plugins
 │   └── my_operators.py    <- Your plugin file
 └── unittests.cfg
+
+
+
+
+
+
+
+
+Debugging an Airflow operator
+
+With `airflow test` command, you can manually start a single operator in the context of a specific DAG run.
+
+DAG run MUST HAVE EXISTED! For DAG run datetime use local time, not UTC (can be found via web UI)
+
+The command takes 3 arguments: the name of the dag, the name of a task and a date associated with a particular DAG Run.
+
+`(venv) $ airflow test my_test_dag my_first_operator_task 2017-03-18T18:00:00.0`
+
+If you want to test a task from a particular DAG run, you can find the needed date value in the logs of a failing task instance.
+
+
+
+
+
+
+
+
+Debugging an Airflow operator with IPython
+
+`(venv) $ pip install ipython`
+
+You can then place IPython’s `embed()` command in your code, for example in the execute method of an operator
+
+Example:
+  ```
+  def execute(self, context):
+    log.info("Hello World!")
+
+    from IPython import embed; embed()
+
+    log.info('operator_param: %s', self.operator_param)
+  ```
+
+  You could of course also drop into Python’s interactive debugger pdb (import pdb; pdb.set_trace()) or the IPython enhanced version ipdb (import ipdb; ipdb.set_trace()).
