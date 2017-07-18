@@ -1,9 +1,10 @@
 http://michal.karzynski.pl/blog/2017/03/19/developing-workflows-with-apache-airflow/
 
 
+__________________________________________________________________________________________________
 
 
-Prerequisites
+### Prerequisites
 
 $ python3 --version
 Python 3.6.0
@@ -12,11 +13,12 @@ $ virtualenv --version
 
 
 
+__________________________________________________________________________________________________
 
 
 
+### Install Airflow
 
-Install Airflow
 $ cd /path/to/my/airflow/workspace
 $ virtualenv -p `which python3` venv
 $ source venv/bin/activate
@@ -30,25 +32,28 @@ $ source venv/bin/activate
 
 (venv) $ airflow version
 
+```
  airflow_home
  ├── airflow.cfg
  └── unittests.cfg
+```
+
+
+__________________________________________________________________________________________________
 
 
 
 
-
-
-
-Initialize the Airflow DB
+### Initialize the Airflow DB
 
 (venv) $ airflow initdb
 
+```
 airflow_home
 ├── airflow.cfg
 ├── airflow.db        <- Airflow SQLite DB
 └── unittests.cfg
-
+```
 
 Start the Airflow web server
 
@@ -58,27 +63,28 @@ Start the Airflow web server
 
 
 
+__________________________________________________________________________________________________
 
 
 
+### Your first Airflow DAG
 
-Your first Airflow DAG
-
+```
 airflow_home
 ├── airflow.cfg
 ├── airflow.db
 ├── dags                <- Your DAGs directory
 │   └── hello_world.py  <- Your DAG definition file
 └── unittests.cfg
+```
 
 
 
+__________________________________________________________________________________________________
 
 
 
-
-
-Running your DAG
+### Running your DAG
 
 IN A SECOND TERMINAL WITH THE SERVER RUNNING
 
@@ -90,18 +96,18 @@ $ source venv/bin/activate
 
 
 
+__________________________________________________________________________________________________
 
 
 
-
-Your first Airflow Operator
+### Your first Airflow Operator
 
 An Operator is an atomic block of workflow logic, which performs a single action.
 
 Operators are written as Python classes (subclasses of BaseOperator), where the `__init__` function can be used to configure settings for the task and a method named execute is called when the task instance is executed.
 
 Remember that since the execute method can retry many times, it should be idempotent.
-
+```
 airflow_home
 ├── airflow.cfg
 ├── airflow.db
@@ -111,15 +117,15 @@ airflow_home
 ├── plugins
 │   └── my_operators.py    <- Your plugin file
 └── unittests.cfg
+```
 
 
 
+__________________________________________________________________________________________________
 
 
 
-
-
-Debugging an Airflow operator
+### Debugging an Airflow operator
 
 With `airflow test` command, you can manually start a single operator in the context of a specific DAG run.
 
@@ -134,12 +140,12 @@ If you want to test a task from a particular DAG run, you can find the needed da
 
 
 
+__________________________________________________________________________________________________
 
 
 
 
-
-Debugging an Airflow operator with IPython
+### Debugging an Airflow operator with IPython
 
 `(venv) $ pip install ipython`
 
@@ -160,13 +166,13 @@ Example:
 
 
 
+__________________________________________________________________________________________________
 
 
 
 
 
-
-Your first Airflow Sensor
+### Your first Airflow Sensor
 
 An Airflow Sensor is a special type of Operator, typically used to monitor a long running task on another system.
 
@@ -233,12 +239,12 @@ Restart your webserver and scheduler and try out your new workflow.
 
 
 
+__________________________________________________________________________________________________
 
 
 
 
-
-Communicating between operators with Xcom
+### Communicating between operators with Xcom
 
 In most workflow scenarios downstream tasks will have to use some information from an upstream task.
 
