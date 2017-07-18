@@ -1,3 +1,8 @@
+http://michal.karzynski.pl/blog/2017/03/19/developing-workflows-with-apache-airflow/
+
+
+
+
 Prerequisites
 
 $ python3 --version
@@ -224,3 +229,53 @@ dummy_task >> sensor_task >> operator_task
 ```
 
 Restart your webserver and scheduler and try out your new workflow.
+
+
+
+
+
+
+
+
+
+Communicating between operators with Xcom
+
+In most workflow scenarios downstream tasks will have to use some information from an upstream task.
+
+Since each task instance will run in a different process, perhaps on a different machine, Airflow provides a communication mechanism called Xcom for this purpose.
+
+Each task instance can store some information in Xcom using the xcom_push function and another task instance can retrieve this information using xcom_pull.
+
+The information passed using Xcoms will be pickled and stored in the Airflow database (xcom table), so it’s better to save only small bits of information, rather then large objects.
+
+Let’s enhance our Sensor, so that it saves a value to Xcom. We’re using the xcom_push() function which takes two arguments – a key under which the value will be saved and the value itself.
+
+```
+class MyFirstSensor(BaseSensorOperator):
+    ...
+
+    def poke(self, context):
+        ...
+        log.info("Current minute (%s) is divisible by 3, sensor finishing.", current_minute)
+        task_instance = context['task_instance']
+        task_instance.xcom_push('sensors_minute', current_minute)
+        return True
+```
+
+Now in our operator, which is downstream from the sensor in our DAG, we can use this value, by retrieving it from Xcom.
+
+Here we’re using the xcom_pull() function providing it with two arguments – the task ID of the task instance which stored the value and the key under which the value was stored.
+
+```
+class MyFirstOperator(BaseOperator):
+    ...
+
+    def execute(self, context):
+        log.info("Hello World!")
+        log.info('operator_param: %s', self.operator_param)
+        task_instance = context['task_instance']
+        sensors_minute = task_instance.xcom_pull('my_sensor_task', key='sensors_minute')
+        log.info('Valid minute as determined by sensor: %s', sensors_minute)
+```
+
+If you trigger a DAG run now and look in the operator’s logs, you will see that it was able to display the value created by the upstream sensor.
