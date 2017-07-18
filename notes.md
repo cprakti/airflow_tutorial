@@ -133,6 +133,7 @@ If you want to test a task from a particular DAG run, you can find the needed da
 
 
 
+
 Debugging an Airflow operator with IPython
 
 `(venv) $ pip install ipython`
@@ -150,3 +151,76 @@ Example:
   ```
 
   You could of course also drop into Python’s interactive debugger pdb (import pdb; pdb.set_trace()) or the IPython enhanced version ipdb (import ipdb; ipdb.set_trace()).
+
+
+
+
+
+
+
+
+
+
+Your first Airflow Sensor
+
+An Airflow Sensor is a special type of Operator, typically used to monitor a long running task on another system.
+
+To create a Sensor, we define a subclass of BaseSensorOperator and override its poke function. The poke function will be called over and over every poke_interval seconds until one of the following happens:
+
+poke returns True – if it returns False it will be called again.
+poke raises an AirflowSkipException from airflow.exceptions – the Sensor task instance’s status will be set to Skipped.
+poke raises another exception, in which case it will be retried until the maximum number of retries is reached.
+
+Predefined sensors exist
+
+To add a new Sensor to your my_operators.py file, add the following code:
+
+```
+from datetime import datetime
+from airflow.operators.sensors import BaseSensorOperator
+
+class MyFirstSensor(BaseSensorOperator):
+
+    @apply_defaults
+    def __init__(self, *args, **kwargs):
+        super(MyFirstSensor, self).__init__(*args, **kwargs)
+
+    def poke(self, context):
+        current_minute = datetime.now().minute
+        if current_minute % 3 != 0:
+            log.info("Current minute (%s) not is divisible by 3, sensor will retry.", current_minute)
+            return False
+
+        log.info("Current minute (%s) is divisible by 3, sensor finishing.", current_minute)
+        return True
+```
+
+Remember to also change the plugin class, to add the new sensor to the operators it exports:
+```
+class MyFirstPlugin(AirflowPlugin):
+    name = "my_first_plugin"
+```
+
+You can now place the operator in your DAG:
+```
+from datetime import datetime
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators import MyFirstOperator, MyFirstSensor
+
+
+dag = DAG('my_test_dag', description='Another tutorial DAG',
+          schedule_interval='0 12 * * *',
+          start_date=datetime(2017, 3, 20), catchup=False)
+
+dummy_task = DummyOperator(task_id='dummy_task', dag=dag)
+
+sensor_task = MyFirstSensor(task_id='my_sensor_task', poke_interval=30, dag=dag)
+
+operator_task = MyFirstOperator(my_operator_param='This is a test.',
+                                task_id='my_first_operator_task', dag=dag)
+
+dummy_task >> sensor_task >> operator_task
+```
+
+Restart your webserver and scheduler and try out your new workflow.
